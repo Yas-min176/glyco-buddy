@@ -33,7 +33,7 @@ export function useUserProfile() {
           .single();
 
         if (error) throw error;
-        setProfile(data);
+        setProfile(data as UserProfile);
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
@@ -56,7 +56,7 @@ export function useUserProfile() {
         },
         (payload) => {
           if (payload.new) {
-            setProfile(payload.new as UserProfile);
+            setProfile(payload.new as unknown as UserProfile);
           }
         }
       )

@@ -62,7 +62,7 @@ export function InsulinCalculationConfig({
         if (error) {
           console.error('Error fetching config:', error);
         } else if (data) {
-          setCalculationType(data.dosage_calculation_type || 'rules');
+          setCalculationType((data.dosage_calculation_type || 'rules') as CalculationType);
           setFormula(data.insulin_formula || '(glucose - 100) / 30');
           setInsulinType(data.insulin_type || '');
         }
