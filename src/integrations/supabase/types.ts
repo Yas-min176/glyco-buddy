@@ -117,7 +117,10 @@ export type Database = {
         Row: {
           birth_date: string | null
           created_at: string
+          dosage_calculation_type: string
           id: string
+          insulin_formula: string | null
+          insulin_type: string | null
           name: string
           updated_at: string
           user_id: string
@@ -126,7 +129,10 @@ export type Database = {
         Insert: {
           birth_date?: string | null
           created_at?: string
+          dosage_calculation_type?: string
           id?: string
+          insulin_formula?: string | null
+          insulin_type?: string | null
           name: string
           updated_at?: string
           user_id: string
@@ -135,7 +141,10 @@ export type Database = {
         Update: {
           birth_date?: string | null
           created_at?: string
+          dosage_calculation_type?: string
           id?: string
+          insulin_formula?: string | null
+          insulin_type?: string | null
           name?: string
           updated_at?: string
           user_id?: string
