@@ -59,7 +59,7 @@ export function useDosageRules() {
       if (profileError) {
         console.error('Error fetching profile:', profileError);
       } else {
-        setCalculationType(profile?.dosage_calculation_type || 'rules');
+        setCalculationType((profile?.dosage_calculation_type || 'rules') as 'rules' | 'formula');
         setInsulinFormula(profile?.insulin_formula || null);
         setInsulinType(profile?.insulin_type || null);
       }

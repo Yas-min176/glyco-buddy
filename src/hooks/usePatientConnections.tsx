@@ -59,11 +59,7 @@ export function usePatientConnections() {
         return;
       }
 
-      let query = supabase.from('patient_connections').select(`
-        *,
-        patient_profile:profiles!patient_connections_patient_id_fkey(name, birth_date),
-        caregiver_profile:profiles!patient_connections_caregiver_id_fkey(name, user_type)
-      `);
+      let query = supabase.from('patient_connections').select('*');
 
       if (profile.user_type === 'patient') {
         query = query.eq('patient_id', user.id);
@@ -77,7 +73,32 @@ export function usePatientConnections() {
         console.error('Error fetching connections:', error);
       }
       
-      setConnections(data || []);
+      // Fetch profiles separately for each connection
+      const connectionsWithProfiles: PatientConnection[] = [];
+      if (data) {
+        for (const conn of data) {
+          const { data: patientProfile } = await supabase
+            .from('profiles')
+            .select('name, birth_date')
+            .eq('user_id', conn.patient_id)
+            .single();
+          
+          const { data: caregiverProfile } = await supabase
+            .from('profiles')
+            .select('name, user_type')
+            .eq('user_id', conn.caregiver_id)
+            .single();
+          
+          connectionsWithProfiles.push({
+            ...conn,
+            status: conn.status as 'pending' | 'accepted' | 'rejected',
+            patient_profile: patientProfile || undefined,
+            caregiver_profile: caregiverProfile || undefined,
+          });
+        }
+      }
+      
+      setConnections(connectionsWithProfiles);
     } catch (error) {
       console.error('Error fetching connections:', error);
     } finally {
@@ -93,57 +114,14 @@ export function usePatientConnections() {
     if (!user) return { error: 'Not authenticated' };
 
     try {
-      // Find caregiver by email
-      const { data: caregiverProfile, error: searchError } = await supabase
-        .from('profiles')
-        .select('user_id, name, user_type')
-        .eq('user_id', supabase.auth.getUser().then(res => res.data.user?.email === caregiverEmail ? res.data.user.id : null))
-        .single();
-
-      if (searchError) {
-        // Try alternative approach - search via auth
-        const { data: users } = await supabase.auth.admin.listUsers();
-        const caregiver = users?.users.find(u => u.email === caregiverEmail);
-        
-        if (!caregiver) {
-          return { error: 'Usuário não encontrado' };
-        }
-
-        // Check if caregiver or doctor
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('user_id', caregiver.id)
-          .single();
-
-        if (profile?.user_type === 'patient') {
-          return { error: 'Este usuário é um paciente, não um cuidador ou médico' };
-        }
-
-        const { error: insertError } = await supabase
-          .from('patient_connections')
-          .insert({
-            patient_id: user.id,
-            caregiver_id: caregiver.id,
-            status: 'pending',
-          });
-
-        if (insertError) {
-          if (insertError.message.includes('duplicate')) {
-            return { error: 'Conexão já existe' };
-          }
-          throw insertError;
-        }
-
-        await fetchConnections();
-        toast({
-          title: 'Convite enviado!',
-          description: 'O cuidador/médico receberá sua solicitação.',
-        });
-        return { error: null };
-      }
-
-      return { error: 'Método não implementado completamente' };
+      // Note: Cannot search users by email directly from client
+      // This would require an edge function or different approach
+      toast({
+        title: 'Funcionalidade em desenvolvimento',
+        description: 'A busca por email requer configuração adicional do servidor.',
+        variant: 'destructive',
+      });
+      return { error: 'Funcionalidade em desenvolvimento' };
     } catch (error) {
       console.error('Error sending connection request:', error);
       return { error: 'Erro ao enviar convite' };
