@@ -1,4 +1,4 @@
-import { GlucoseStatus, getStatusColor, getStatusLabel } from '@/lib/glucoseCalculator';
+import { GlucoseStatus, getStatusColor, getStatusLabel } from '@/hooks/useDosageRules';
 import { cn } from '@/lib/utils';
 
 interface GlucoseDisplayProps {
@@ -6,9 +6,10 @@ interface GlucoseDisplayProps {
   status: GlucoseStatus;
   showLabel?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  timestamp?: string;
 }
 
-export function GlucoseDisplay({ value, status, showLabel = true, size = 'lg' }: GlucoseDisplayProps) {
+export function GlucoseDisplay({ value, status, showLabel = true, size = 'lg', timestamp }: GlucoseDisplayProps) {
   const color = getStatusColor(status);
   const label = getStatusLabel(status);
   
@@ -33,29 +34,19 @@ export function GlucoseDisplay({ value, status, showLabel = true, size = 'lg' }:
   };
 
   return (
-    <div 
-      className={cn(
-        "rounded-3xl border-2 p-6 md:p-8 text-center transition-all duration-300",
-        containerClasses[color as keyof typeof containerClasses]
-      )}
-    >
-      <div className={cn(
-        "font-extrabold tracking-tight transition-colors",
-        sizeClasses[size],
-        textClasses[color as keyof typeof textClasses]
-      )}>
+    <div className={cn("rounded-3xl border-2 p-6 md:p-8 text-center transition-all duration-300", containerClasses[color as keyof typeof containerClasses])}>
+      <div className={cn("font-extrabold tracking-tight transition-colors", sizeClasses[size], textClasses[color as keyof typeof textClasses])}>
         {value}
         <span className="text-2xl md:text-3xl ml-2 font-semibold opacity-70">mg/dL</span>
       </div>
       
       {showLabel && (
-        <div className={cn(
-          "mt-3 text-xl md:text-2xl font-bold",
-          textClasses[color as keyof typeof textClasses]
-        )}>
+        <div className={cn("mt-3 text-xl md:text-2xl font-bold", textClasses[color as keyof typeof textClasses])}>
           {label}
         </div>
       )}
+
+      {timestamp && <p className="text-muted-foreground text-sm mt-3">{timestamp}</p>}
     </div>
   );
 }

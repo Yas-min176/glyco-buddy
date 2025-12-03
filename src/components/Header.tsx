@@ -1,50 +1,59 @@
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { Home, History, Settings, Plus } from 'lucide-react';
+import { NavLink } from './NavLink';
+import { Home, History, Settings, Plus, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from './ui/button';
 
 export function Header() {
-  const location = useLocation();
-  
-  const navItems = [
-    { path: '/', icon: Home, label: 'Início' },
-    { path: '/nova-medicao', icon: Plus, label: 'Nova Medição' },
-    { path: '/historico', icon: History, label: 'Histórico' },
-    { path: '/configuracoes', icon: Settings, label: 'Config' },
-  ];
+  const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-xl">💉</span>
+    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border/50">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <span className="text-3xl animate-bounce-gentle">🐝</span>
+            <div>
+              <h1 className="text-2xl font-extrabold text-primary tracking-tight">
+                Beez
+              </h1>
+              <p className="text-xs text-muted-foreground -mt-1">Guia de Glicemia</p>
             </div>
-            <span className="font-bold text-xl text-foreground hidden sm:block">
-              GlicoGuia
-            </span>
-          </Link>
-          
-          <nav className="flex items-center gap-1">
-            {navItems.map(({ path, icon: Icon, label }) => (
-              <Link
-                key={path}
-                to={path}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-xl transition-all",
-                  "text-sm font-semibold",
-                  location.pathname === path
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                )}
+          </div>
+
+          {/* User info */}
+          {user && (
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span className="max-w-[120px] truncate">{user.email}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={signOut}
+                className="text-muted-foreground hover:text-danger"
               >
-                <Icon className="w-5 h-5" />
-                <span className="hidden md:block">{label}</span>
-              </Link>
-            ))}
-          </nav>
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Navigation */}
+      {user && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border/50 z-50 pb-safe">
+          <div className="container mx-auto px-2 py-2">
+            <div className="flex justify-around items-center">
+              <NavLink to="/" icon={Home} label="Início" />
+              <NavLink to="/nova-medicao" icon={Plus} label="Medir" primary />
+              <NavLink to="/historico" icon={History} label="Histórico" />
+              <NavLink to="/configuracoes" icon={Settings} label="Config" />
+            </div>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }
