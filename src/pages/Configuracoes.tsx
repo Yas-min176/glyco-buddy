@@ -3,12 +3,16 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { savePatientInfo, getPatientInfo, PatientInfo } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
-import { User, UserPlus, Save, Heart, Info } from 'lucide-react';
+import { useDosageRules } from '@/hooks/useDosageRules';
+import { InsulinCalculationConfig } from '@/components/InsulinCalculationConfig';
+import { User, UserPlus, Save, Heart, Info, Calculator } from 'lucide-react';
 
 const Configuracoes = () => {
   const { toast } = useToast();
+  const { rules, loading, updateRule, addRule, deleteRule } = useDosageRules();
   const [formData, setFormData] = useState<PatientInfo>({
     name: '',
     birthDate: '',
@@ -40,7 +44,7 @@ const Configuracoes = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-6 pb-24 max-w-2xl">
+      <main className="container mx-auto px-4 py-6 pb-24 max-w-4xl">
         <div className="mb-6 animate-fade-in">
           <h1 className="text-heading text-foreground mb-1">
             Configurações
@@ -50,7 +54,20 @@ const Configuracoes = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
+        <Tabs defaultValue="personal" className="animate-fade-in">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="personal" className="gap-2">
+              <User className="w-4 h-4" />
+              Pessoais
+            </TabsTrigger>
+            <TabsTrigger value="calculation" className="gap-2">
+              <Calculator className="w-4 h-4" />
+              Cálculo de Insulina
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="personal">
+            <form onSubmit={handleSubmit} className="space-y-6">
           {/* Patient Info */}
           <div className="card-elevated p-6">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
@@ -156,6 +173,20 @@ const Configuracoes = () => {
             Salvar Configurações
           </Button>
         </form>
+      </TabsContent>
+
+      <TabsContent value="calculation">
+        <div className="card-elevated p-6">
+          <InsulinCalculationConfig 
+            rules={rules}
+            loadingRules={loading}
+            onUpdateRule={updateRule}
+            onAddRule={addRule}
+            onDeleteRule={deleteRule}
+          />
+        </div>
+      </TabsContent>
+    </Tabs>
       </main>
     </div>
   );

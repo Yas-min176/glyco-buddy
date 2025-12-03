@@ -3,10 +3,11 @@ import { Header } from '@/components/Header';
 import { ReadingHistory } from '@/components/ReadingHistory';
 import { QuickStats } from '@/components/QuickStats';
 import { Button } from '@/components/ui/button';
-import { getReadings, getWeekReadings, deleteReading } from '@/lib/storage';
+import { getReadings, getWeekReadings, deleteReading, getPatientInfo } from '@/lib/storage';
 import { GlucoseReading } from '@/lib/glucoseCalculator';
+import { printReport, exportToCSV } from '@/lib/exportUtils';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, CalendarDays, Trash2 } from 'lucide-react';
+import { Calendar, CalendarDays, Trash2, Printer, Download, FileText } from 'lucide-react';
 
 type FilterType = 'all' | 'week' | 'today';
 
@@ -57,6 +58,20 @@ const Historico = () => {
     all: 'Todas'
   };
 
+  const handlePrint = () => {
+    const patientInfo = getPatientInfo();
+    printReport(readings, patientInfo?.name);
+  };
+
+  const handleExportCSV = () => {
+    const patientInfo = getPatientInfo();
+    exportToCSV(readings, patientInfo?.name);
+    toast({
+      title: 'Exportado com sucesso!',
+      description: 'O arquivo CSV foi baixado.',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -92,6 +107,28 @@ const Historico = () => {
         {readings.length > 0 && (
           <div className="mb-6 animate-fade-in">
             <QuickStats readings={readings} />
+          </div>
+        )}
+
+        {/* Export Buttons */}
+        {readings.length > 0 && (
+          <div className="mb-6 animate-fade-in">
+            <div className="card-elevated p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                Exportar Relatório
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={handlePrint} variant="outline" className="gap-2">
+                  <Printer className="w-4 h-4" />
+                  Imprimir
+                </Button>
+                <Button onClick={handleExportCSV} variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Baixar CSV
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 

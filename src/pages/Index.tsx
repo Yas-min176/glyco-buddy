@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { GlucoseDisplay } from '@/components/GlucoseDisplay';
 import { QuickStats } from '@/components/QuickStats';
+import { FormulaInfo } from '@/components/FormulaInfo';
 import { Button } from '@/components/ui/button';
 import { Plus, TrendingUp, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useDosageRules } from '@/hooks/useDosageRules';
 import { GlucoseStatus } from '@/hooks/useDosageRules';
 
 interface GlucoseReading {
@@ -21,10 +24,20 @@ interface GlucoseReading {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { profile, loading: profileLoading } = useUserProfile();
+  const { calculationType, insulinFormula, insulinType } = useDosageRules();
   const [lastReading, setLastReading] = useState<GlucoseReading | null>(null);
   const [weekReadings, setWeekReadings] = useState<GlucoseReading[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Redirect caregivers and doctors to patients page
+  useEffect(() => {
+    if (!profileLoading && profile && (profile.user_type === 'caregiver' || profile.user_type === 'doctor')) {
+      navigate('/meus-pacientes');
+    }
+  }, [profile, profileLoading, navigate]);
 
   useEffect(() => {
     const fetchReadings = async () => {
@@ -103,6 +116,13 @@ const Index = () => {
             </div>
           </div>
         </Link>
+
+        {/* Formula Info */}
+        {calculationType === 'formula' && insulinFormula && (
+          <div className="mb-6 animate-fade-in">
+            <FormulaInfo formula={insulinFormula} insulinType={insulinType} />
+          </div>
+        )}
 
         {/* Last Reading */}
         {loading ? (

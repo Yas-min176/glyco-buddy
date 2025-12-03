@@ -18,7 +18,7 @@ const NovaMedicao = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { calculateRecommendation, loading: rulesLoading } = useDosageRules();
+  const { calculateRecommendation, loading: rulesLoading, calculationType, insulinFormula, insulinType } = useDosageRules();
   
   const [glucoseValue, setGlucoseValue] = useState<number | null>(null);
   const [recommendation, setRecommendation] = useState<GlucoseRecommendation | null>(null);
@@ -99,6 +99,17 @@ const NovaMedicao = () => {
           <p className="text-muted-foreground text-lg">
             Digite o valor da sua glicemia
           </p>
+          {calculationType === 'formula' && insulinFormula && (
+            <div className="mt-3 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">Método de cálculo:</span> Fórmula matemática
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
+                {insulinFormula}
+                {insulinType && <span className="ml-2">({insulinType})</span>}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Glucose Input */}

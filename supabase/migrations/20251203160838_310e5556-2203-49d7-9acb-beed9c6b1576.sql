@@ -5,6 +5,9 @@ CREATE TABLE public.profiles (
   name TEXT NOT NULL,
   birth_date DATE,
   user_type TEXT NOT NULL DEFAULT 'patient' CHECK (user_type IN ('patient', 'caregiver', 'doctor')),
+  dosage_calculation_type TEXT NOT NULL DEFAULT 'rules' CHECK (dosage_calculation_type IN ('rules', 'formula')),
+  insulin_formula TEXT,
+  insulin_type TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
@@ -122,18 +125,24 @@ LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, name)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'name', 'Usuário'));
+  INSERT INTO public.profiles (user_id, name, user_type)
+  VALUES (
+    NEW.id, 
+    COALESCE(NEW.raw_user_meta_data->>'name', 'Usuário'),
+    COALESCE(NEW.raw_user_meta_data->>'user_type', 'patient')
+  );
   
-  -- Insert default dosage rules for new patient
-  INSERT INTO public.dosage_rules (user_id, min_glucose, max_glucose, insulin_units, recommendation, is_emergency, display_order)
-  VALUES
-    (NEW.id, 450, NULL, 4, 'Tome 4 unidades de insulina humana regular.', true, 1),
-    (NEW.id, 350, 449, 3, 'Tome 3 unidades de insulina humana regular.', false, 2),
-    (NEW.id, 250, 349, 2, 'Tome 2 unidades de insulina humana regular.', false, 3),
-    (NEW.id, 0, 60, NULL, 'Coma um alimento doce IMEDIATAMENTE e vá ao hospital caso a condição se mantenha.', true, 4),
-    (NEW.id, 61, 89, NULL, 'Coma um alimento doce para elevar a glicemia.', false, 5),
-    (NEW.id, 90, 249, NULL, 'Glicemia estável. Continue monitorando normalmente.', false, 6);
+  -- Insert default dosage rules only for patients
+  IF COALESCE(NEW.raw_user_meta_data->>'user_type', 'patient') = 'patient' THEN
+    INSERT INTO public.dosage_rules (user_id, min_glucose, max_glucose, insulin_units, recommendation, is_emergency, display_order)
+    VALUES
+      (NEW.id, 450, NULL, 4, 'Tome 4 unidades de insulina humana regular.', true, 1),
+      (NEW.id, 350, 449, 3, 'Tome 3 unidades de insulina humana regular.', false, 2),
+      (NEW.id, 250, 349, 2, 'Tome 2 unidades de insulina humana regular.', false, 3),
+      (NEW.id, 0, 60, NULL, 'Coma um alimento doce IMEDIATAMENTE e vá ao hospital caso a condição se mantenha.', true, 4),
+      (NEW.id, 61, 89, NULL, 'Coma um alimento doce para elevar a glicemia.', false, 5),
+      (NEW.id, 90, 249, NULL, 'Glicemia estável. Continue monitorando normalmente.', false, 6);
+  END IF;
   
   RETURN NEW;
 END;

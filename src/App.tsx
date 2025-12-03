@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NovaMedicao from "./pages/NovaMediao";
 import Historico from "./pages/Historico";
 import Configuracoes from "./pages/Configuracoes";
+import Conexoes from "./pages/Conexoes";
+import MeusPacientes from "./pages/MeusPacientes";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -80,6 +82,16 @@ const AppRoutes = () => (
     <Route path="/configuracoes" element={
       <ProtectedRoute>
         <Configuracoes />
+      </ProtectedRoute>
+    } />
+    <Route path="/conexoes" element={
+      <ProtectedRoute>
+        <Conexoes />
+      </ProtectedRoute>
+    } />
+    <Route path="/meus-pacientes" element={
+      <ProtectedRoute>
+        <MeusPacientes />
       </ProtectedRoute>
     } />
     <Route path="*" element={<NotFound />} />

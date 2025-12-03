@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { ensureUserProfile } from '@/lib/ensureProfile';
 
 export interface DosageRule {
   id: string;
@@ -29,18 +30,51 @@ export function useDosageRules() {
   const { toast } = useToast();
   const [rules, setRules] = useState<DosageRule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [calculationType, setCalculationType] = useState<'rules' | 'formula'>('rules');
+  const [insulinFormula, setInsulinFormula] = useState<string | null>(null);
+  const [insulinType, setInsulinType] = useState<string | null>(null);
 
   const fetchRules = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     try {
+      // Garante que o profile existe antes de buscar dados
+      const profileExists = await ensureUserProfile(user);
+      if (!profileExists) {
+        console.error('Não foi possível garantir o profile do usuário');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user calculation preferences
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('dosage_calculation_type, insulin_formula, insulin_type')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      } else {
+        setCalculationType(profile?.dosage_calculation_type || 'rules');
+        setInsulinFormula(profile?.insulin_formula || null);
+        setInsulinType(profile?.insulin_type || null);
+      }
+
+      // Fetch dosage rules
       const { data, error } = await supabase
         .from('dosage_rules')
         .select('*')
         .eq('user_id', user.id)
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching rules:', error);
+      }
+      
       setRules(data || []);
     } catch (error) {
       console.error('Error fetching dosage rules:', error);
@@ -130,9 +164,107 @@ export function useDosageRules() {
   };
 
   const calculateRecommendation = (glucoseValue: number): GlucoseRecommendation => {
-    // Sort rules to check in proper order (highest min_glucose first for high values)
+    // MÉTODO 1: FÓRMULA MATEMÁTICA (uma única fórmula)
+    if (calculationType === 'formula' && insulinFormula) {
+      try {
+        const formulaStr = insulinFormula.replace(/glucose/gi, glucoseValue.toString());
+        // eslint-disable-next-line no-eval
+        const calculatedUnits = eval(formulaStr);
+        const units = Math.round(calculatedUnits * 10) / 10;
+        
+        // Hipoglicemia crítica - NUNCA aplica insulina
+        if (glucoseValue <= 60) {
+          return {
+            status: 'critical-low',
+            message: '🆘 COMA ALGO DOCE IMEDIATAMENTE! Procure atendimento médico se não melhorar.',
+            insulinUnits: undefined,
+            isEmergency: true,
+            icon: '🆘',
+          };
+        }
+        
+        // Hipoglicemia - NUNCA aplica insulina
+        if (glucoseValue < 90) {
+          return {
+            status: 'low',
+            message: 'Coma um alimento doce para elevar a glicemia.',
+            insulinUnits: undefined,
+            isEmergency: false,
+            icon: '🍬',
+          };
+        }
+        
+        // Hiperglicemia crítica
+        if (glucoseValue >= 450) {
+          return {
+            status: 'critical-high',
+            message: `🚨 Tome ${units.toFixed(1)} unidades de ${insulinType || 'insulina'} e BUSQUE ATENDIMENTO MÉDICO IMEDIATAMENTE!`,
+            insulinUnits: units > 0 ? units : undefined,
+            isEmergency: true,
+            icon: '🚨',
+          };
+        }
+        
+        // Hiperglicemia alta
+        if (glucoseValue >= 350) {
+          return {
+            status: 'very-high',
+            message: units > 0 
+              ? `Tome ${units.toFixed(1)} unidades de ${insulinType || 'insulina'}.`
+              : 'Continue monitorando. Consulte seu médico.',
+            insulinUnits: units > 0 ? units : undefined,
+            isEmergency: false,
+            icon: '💉',
+          };
+        }
+        
+        // Hiperglicemia
+        if (glucoseValue >= 250) {
+          return {
+            status: 'high',
+            message: units > 0 
+              ? `Tome ${units.toFixed(1)} unidades de ${insulinType || 'insulina'}.`
+              : 'Continue monitorando. Consulte seu médico se persistir elevada.',
+            insulinUnits: units > 0 ? units : undefined,
+            isEmergency: false,
+            icon: '💉',
+          };
+        }
+        
+        // Normal
+        return {
+          status: 'normal',
+          message: 'Glicemia estável. Continue monitorando normalmente.',
+          insulinUnits: undefined,
+          isEmergency: false,
+          icon: '✅',
+        };
+      } catch (error) {
+        console.error('Erro ao calcular fórmula:', error);
+        toast({
+          title: 'Erro na fórmula',
+          description: 'A fórmula configurada está inválida. Usando regras padrão.',
+          variant: 'destructive',
+        });
+        // Continua para usar regras como fallback
+      }
+    }
+
+    // MÉTODO 2: REGRAS RELACIONAIS (várias regras)
+    if (rules.length === 0) {
+      return {
+        status: 'normal',
+        message: 'Configure as regras de dosagem em Configurações.',
+        insulinUnits: undefined,
+        isEmergency: false,
+        icon: '⚙️',
+      };
+    }
+
+    // Ordena regras do maior para o menor (mais crítico primeiro)
     const sortedRules = [...rules].sort((a, b) => b.min_glucose - a.min_glucose);
     
+    // Procura a regra que se aplica
     for (const rule of sortedRules) {
       const matchesMin = glucoseValue >= rule.min_glucose;
       const matchesMax = rule.max_glucose === null || glucoseValue <= rule.max_glucose;
@@ -148,10 +280,11 @@ export function useDosageRules() {
       }
     }
 
-    // Default fallback
+    // Fallback se nenhuma regra se aplicar
     return {
-      message: 'Glicemia estável. Continue monitorando normalmente.',
       status: 'normal',
+      message: 'Glicemia estável. Continue monitorando normalmente.',
+      insulinUnits: undefined,
       isEmergency: false,
       icon: '✅',
     };
@@ -160,6 +293,9 @@ export function useDosageRules() {
   return {
     rules,
     loading,
+    calculationType,
+    insulinFormula,
+    insulinType,
     updateRule,
     addRule,
     deleteRule,
