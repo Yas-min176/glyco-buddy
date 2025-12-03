@@ -1,28 +1,31 @@
-import { NavLink as RouterNavLink, NavLinkProps } from "react-router-dom";
-import { forwardRef } from "react";
+import { NavLink as RouterNavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
 
-interface NavLinkCompatProps extends Omit<NavLinkProps, "className"> {
-  className?: string;
-  activeClassName?: string;
-  pendingClassName?: string;
+interface NavLinkProps {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+  primary?: boolean;
 }
 
-const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
-  ({ className, activeClassName, pendingClassName, to, ...props }, ref) => {
-    return (
-      <RouterNavLink
-        ref={ref}
-        to={to}
-        className={({ isActive, isPending }) =>
-          cn(className, isActive && activeClassName, isPending && pendingClassName)
-        }
-        {...props}
-      />
-    );
-  },
-);
-
-NavLink.displayName = "NavLink";
-
-export { NavLink };
+export function NavLink({ to, icon: Icon, label, primary }: NavLinkProps) {
+  return (
+    <RouterNavLink
+      to={to}
+      className={({ isActive }) =>
+        cn(
+          "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all min-w-[60px]",
+          primary
+            ? "bg-primary text-primary-foreground shadow-lg"
+            : isActive
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground"
+        )
+      }
+    >
+      <Icon className={cn("w-6 h-6", primary && "w-7 h-7")} />
+      <span className="text-xs font-semibold">{label}</span>
+    </RouterNavLink>
+  );
+}

@@ -14,7 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dosage_rules: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          insulin_units: number | null
+          is_emergency: boolean | null
+          max_glucose: number | null
+          min_glucose: number
+          recommendation: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          insulin_units?: number | null
+          is_emergency?: boolean | null
+          max_glucose?: number | null
+          min_glucose: number
+          recommendation: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          insulin_units?: number | null
+          is_emergency?: boolean | null
+          max_glucose?: number | null
+          min_glucose?: number
+          recommendation?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      glucose_readings: {
+        Row: {
+          created_at: string
+          id: string
+          insulin_units: number | null
+          is_fasting: boolean | null
+          meal_description: string | null
+          recommendation: string | null
+          status: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insulin_units?: number | null
+          is_fasting?: boolean | null
+          meal_description?: string | null
+          recommendation?: string | null
+          status: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insulin_units?: number | null
+          is_fasting?: boolean | null
+          meal_description?: string | null
+          recommendation?: string | null
+          status?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      patient_connections: {
+        Row: {
+          caregiver_id: string
+          created_at: string
+          id: string
+          patient_id: string
+          status: string
+        }
+        Insert: {
+          caregiver_id: string
+          created_at?: string
+          id?: string
+          patient_id: string
+          status?: string
+        }
+        Update: {
+          caregiver_id?: string
+          created_at?: string
+          id?: string
+          patient_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+          user_type?: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
