@@ -264,31 +264,6 @@ patient_connections
 
 ---
 
-## 🎨 Screenshots
-
-<table>
-<tr>
-<td align="center">
-<img src="docs/screenshots/home.png" width="200px" alt="Tela Inicial"/>
-<br /><b>Tela Inicial</b>
-</td>
-<td align="center">
-<img src="docs/screenshots/medicao.png" width="200px" alt="Nova Medição"/>
-<br /><b>Nova Medição</b>
-</td>
-<td align="center">
-<img src="docs/screenshots/historico.png" width="200px" alt="Histórico"/>
-<br /><b>Histórico</b>
-</td>
-<td align="center">
-<img src="docs/screenshots/config.png" width="200px" alt="Configurações"/>
-<br /><b>Configurações</b>
-</td>
-</tr>
-</table>
-
----
-
 ## 🚀 Deploy
 
 ### Deploy Automático (Lovable)
