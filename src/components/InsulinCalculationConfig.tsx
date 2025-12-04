@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DosageRuleEditor } from '@/components/DosageRuleEditor';
 import { DosageRule } from '@/hooks/useDosageRules';
 import { ensureUserProfile } from '@/lib/ensureProfile';
-
+import { evaluateFormula, validateFormula } from '@/lib/safeFormulaEvaluator';
 type CalculationType = 'rules' | 'formula';
 
 interface InsulinCalculationConfigProps {
@@ -136,22 +136,32 @@ export function InsulinCalculationConfig({
   };
 
   const testFormula = () => {
-    try {
-      const testValue = 150;
-      const testFormula = formula.replace(/glucose/gi, testValue.toString());
-      // eslint-disable-next-line no-eval
-      const result = eval(testFormula);
-      toast({
-        title: 'Teste da fórmula',
-        description: `Para glicemia ${testValue} mg/dL: ${result.toFixed(2)} unidades`,
-      });
-    } catch (error) {
+    const validation = validateFormula(formula);
+    if (!validation.isValid) {
       toast({
         title: 'Fórmula inválida',
-        description: 'Verifique a sintaxe da fórmula.',
+        description: validation.error || 'Verifique a sintaxe da fórmula.',
         variant: 'destructive',
       });
+      return;
     }
+
+    const testValue = 150;
+    const result = evaluateFormula(formula, testValue);
+    
+    if (result === null) {
+      toast({
+        title: 'Fórmula inválida',
+        description: 'A fórmula produziu um resultado inválido.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    toast({
+      title: 'Teste da fórmula',
+      description: `Para glicemia ${testValue} mg/dL: ${result.toFixed(2)} unidades`,
+    });
   };
 
   if (loading) {

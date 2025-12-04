@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { ensureUserProfile } from '@/lib/ensureProfile';
-
+import { evaluateFormula } from '@/lib/safeFormulaEvaluator';
 export interface DosageRule {
   id: string;
   user_id: string;
@@ -167,9 +167,12 @@ export function useDosageRules() {
     // MÉTODO 1: FÓRMULA MATEMÁTICA (uma única fórmula)
     if (calculationType === 'formula' && insulinFormula) {
       try {
-        const formulaStr = insulinFormula.replace(/glucose/gi, glucoseValue.toString());
-        // eslint-disable-next-line no-eval
-        const calculatedUnits = eval(formulaStr);
+        const calculatedUnits = evaluateFormula(insulinFormula, glucoseValue);
+        
+        if (calculatedUnits === null) {
+          throw new Error('Invalid formula result');
+        }
+        
         const units = Math.round(calculatedUnits * 10) / 10;
         
         // Hipoglicemia crítica - NUNCA aplica insulina
