@@ -4,41 +4,113 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { savePatientInfo, getPatientInfo, PatientInfo } from '@/lib/storage';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useDosageRules } from '@/hooks/useDosageRules';
 import { InsulinCalculationConfig } from '@/components/InsulinCalculationConfig';
 import { User, UserPlus, Save, Heart, Info, Calculator } from 'lucide-react';
 
+interface PatientFormData {
+  name: string;
+  birthDate: string;
+}
+
 const Configuracoes = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const { rules, loading, updateRule, addRule, deleteRule } = useDosageRules();
-  const [formData, setFormData] = useState<PatientInfo>({
+  const [formData, setFormData] = useState<PatientFormData>({
     name: '',
     birthDate: '',
-    caregiverName: '',
-    caregiverContact: ''
   });
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
-    const saved = getPatientInfo();
-    if (saved) {
-      setFormData(saved);
-    }
-  }, []);
+    const loadProfile = async () => {
+      if (!user) {
+        setLoadingProfile(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('name, birth_date')
+          .eq('user_id', user.id)
+          .single();
 
-  const handleSubmit = (e: React.FormEvent) => {
+        if (error) {
+          console.error('Error loading profile:', error);
+        } else if (data) {
+          setFormData({
+            name: data.name || '',
+            birthDate: data.birth_date || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    savePatientInfo(formData);
-    toast({
-      title: "Configurações salvas!",
-      description: "Suas informações foram atualizadas.",
-    });
+    
+    if (!user) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar logado para salvar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: formData.name,
+          birth_date: formData.birthDate || null,
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Configurações salvas!",
+        description: "Suas informações foram atualizadas.",
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar as configurações.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleChange = (field: keyof PatientInfo, value: string) => {
+  const handleChange = (field: keyof PatientFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-6 max-w-4xl">
+          <p className="text-center text-muted-foreground">
+            Faça login para acessar as configurações.
+          </p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,6 +126,9 @@ const Configuracoes = () => {
           </p>
         </div>
 
+        {loadingProfile ? (
+          <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+        ) : (
         <Tabs defaultValue="personal" className="animate-fade-in">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="personal" className="gap-2">
@@ -111,34 +186,6 @@ const Configuracoes = () => {
               Responsável / Cuidador
             </h2>
             
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="caregiverName" className="text-base font-semibold">
-                  Nome do Responsável
-                </Label>
-                <Input
-                  id="caregiverName"
-                  value={formData.caregiverName}
-                  onChange={(e) => handleChange('caregiverName', e.target.value)}
-                  placeholder="Digite o nome"
-                  className="mt-2 h-14 text-lg"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="caregiverContact" className="text-base font-semibold">
-                  Contato (telefone ou email)
-                </Label>
-                <Input
-                  id="caregiverContact"
-                  value={formData.caregiverContact}
-                  onChange={(e) => handleChange('caregiverContact', e.target.value)}
-                  placeholder="Digite o contato"
-                  className="mt-2 h-14 text-lg"
-                />
-              </div>
-            </div>
-            
             <div className="mt-4 p-4 bg-accent rounded-xl">
               <p className="text-sm text-accent-foreground flex items-start gap-2">
                 <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -187,6 +234,7 @@ const Configuracoes = () => {
         </div>
       </TabsContent>
     </Tabs>
+        )}
       </main>
     </div>
   );

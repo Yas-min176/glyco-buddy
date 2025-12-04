@@ -1,5 +1,6 @@
 import { Info, Calculator } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { evaluateFormula } from '@/lib/safeFormulaEvaluator';
 
 interface FormulaInfoProps {
   formula: string;
@@ -7,17 +8,10 @@ interface FormulaInfoProps {
 }
 
 export function FormulaInfo({ formula, insulinType }: FormulaInfoProps) {
-  // Calculate example
+  // Calculate example using safe formula evaluator
   const exampleGlucose = 180;
-  let exampleResult = 0;
-  
-  try {
-    const testFormula = formula.replace(/glucose/gi, exampleGlucose.toString());
-    // eslint-disable-next-line no-eval
-    exampleResult = Math.round(eval(testFormula) * 10) / 10;
-  } catch (error) {
-    exampleResult = 0;
-  }
+  const result = evaluateFormula(formula, exampleGlucose);
+  const exampleResult = result !== null ? Math.round(result * 10) / 10 : 0;
 
   return (
     <Card className="p-4 bg-primary/5 border-primary/30">
