@@ -264,31 +264,6 @@ patient_connections
 
 ---
 
-## 🎨 Screenshots
-
-<table>
-<tr>
-<td align="center">
-<img src="docs/screenshots/home.png" width="200px" alt="Tela Inicial"/>
-<br /><b>Tela Inicial</b>
-</td>
-<td align="center">
-<img src="docs/screenshots/medicao.png" width="200px" alt="Nova Medição"/>
-<br /><b>Nova Medição</b>
-</td>
-<td align="center">
-<img src="docs/screenshots/historico.png" width="200px" alt="Histórico"/>
-<br /><b>Histórico</b>
-</td>
-<td align="center">
-<img src="docs/screenshots/config.png" width="200px" alt="Configurações"/>
-<br /><b>Configurações</b>
-</td>
-</tr>
-</table>
-
----
-
 ## 🚀 Deploy
 
 ### Deploy Automático (Lovable)
@@ -385,10 +360,10 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 <a href="https://github.com/Yas-min176">
 <img src="https://github.com/Yas-min176.png" width="100px;" alt="Yasmin"/>
 <br />
-<sub><b>Yasmin Amorim</b></sub>
+<sub><b>Yasmin Sena</b></sub>
 </a>
 <br />
-<a href="https://www.linkedin.com/in/yasmin-amorim-b72b70251/">LinkedIn</a> •
+<a href="https://www.linkedin.com/in/yas-min176">LinkedIn</a> •
 <a href="https://github.com/Yas-min176">GitHub</a>
 </td>
 </tr>
@@ -491,7 +466,7 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 - [Supabase](https://supabase.com) - Backend infrastructure  
 - [shadcn](https://ui.shadcn.com) - Beautiful components
 - Comunidade React e TypeScript
-- Meu irmão, inspiração para este projeto ❤️
+- Meu irmão, Felipe, inspiração para este projeto ❤️
 
 ---
 
@@ -524,9 +499,9 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 
 ## 📞 Contato e Suporte
 
-- 🐛 **Bugs**: [Abra uma issue](https://github.com/Yas-min176/glicemia-amiga/issues)
-- 💡 **Sugestões**: [Abra uma issue](https://github.com/Yas-min176/glicemia-amiga/issues)
-- 📧 **Email**: [seu-email@exemplo.com](mailto:seu-email@exemplo.com)
+- 🐛 **Bugs**: [Abra uma issue](https://github.com/Yas-min176/glyco-buddy/issues)
+- 💡 **Sugestões**: [Abra uma issue](https://github.com/Yas-min176/glyco-buddy/issues)
+- 📧 **Email**: [yasmin.senaysb@gmail.com](mailto:yasmin.senaysb@gmail.com)
 
 ---
 
@@ -536,7 +511,7 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 
 **2021 → 2025: Do Telegram ao React, evoluindo para ajudar mais pessoas**
 
-[![Star on GitHub](https://img.shields.io/github/stars/Yas-min176/glicemia-amiga?style=social)](https://github.com/Yas-min176/glicemia-amiga)
+[![Star on GitHub](https://img.shields.io/github/stars/Yas-min176/glyco-buddy?style=social)](https://github.com/Yas-min176/glyco-buddy)
 [![Follow](https://img.shields.io/github/followers/Yas-min176?label=Follow&style=social)](https://github.com/Yas-min176)
 
 </div>
