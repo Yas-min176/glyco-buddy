@@ -396,6 +396,95 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 
 ---
 
+## 🧗 Desafios e Aprendizados
+
+### 🚧 Principais Desafios Enfrentados
+
+#### 1. **Erro 400 - Perfil Inexistente**
+**Problema**: Usuários recém-cadastrados recebiam erro 400 ao acessar o app porque o perfil não era criado automaticamente na tabela `profiles`.
+
+**Solução**: 
+- Criamos o helper `ensureProfile.ts` que verifica se o perfil existe
+- Se não existir, cria automaticamente em background
+- Ignora erros de duplicação (código 23505) para evitar race conditions
+
+**Aprendizado**: *Row Level Security (RLS) do Supabase exige planejamento cuidadoso das políticas de acesso. Sempre garantir que dados relacionados sejam criados junto com o usuário.*
+
+#### 2. **Loading Infinito na Primeira Carga**
+**Problema**: Ao fazer login pela primeira vez, a aplicação ficava em loading infinito porque o `ensureUserProfile` era aguardado com `await`, bloqueando a renderização.
+
+**Solução**:
+- Removemos o `await` das chamadas do `ensureUserProfile` no `useAuth.tsx`
+- Profile é criado em background sem bloquear o app
+- UI carrega imediatamente com dados básicos do auth
+
+**Aprendizado**: *Nem toda operação assíncrona precisa bloquear a UI. Operações de "setup" podem rodar em background, priorizando a experiência do usuário.*
+
+#### 3. **Cálculo por Fórmula vs Regras**
+**Problema**: Médicos prescrevem métodos diferentes - alguns usam fórmulas matemáticas `(glucose-100)/30`, outros usam tabelas relacionais por faixa.
+
+**Solução**:
+- Implementamos dois sistemas paralelos: `calculation_type: 'formula' | 'rules'`
+- Hook `useDosageRules` decide qual método usar baseado na configuração
+- Interface unificada em `InsulinCalculationConfig.tsx` com abas
+
+**Aprendizado**: *Flexibilidade é essencial em apps de saúde. Cada paciente tem necessidades únicas, e o sistema deve se adaptar, não o contrário.*
+
+#### 4. **Sistema Multi-Tenant Seguro**
+**Problema**: Cuidadores precisavam ver dados dos pacientes, mas sem comprometer privacidade de outros usuários.
+
+**Solução**:
+- Implementamos Row Level Security (RLS) no Supabase
+- Tabela `patient_connections` com sistema de convites
+- Políticas SQL que permitem acesso apenas a dados autorizados
+- Status de conexão: `pending → accepted → active`
+
+**Aprendizado**: *Segurança não é opcional em apps de saúde. RLS do Supabase oferece camada de proteção a nível de banco, impossível de burlar no frontend.*
+
+#### 5. **Sincronização de Estado com Lovable**
+**Problema**: Desenvolvimento simultâneo entre local e Lovable causava conflitos de merge frequentes.
+
+**Solução**:
+- Estabelecemos workflow: desenvolver no Lovable, depois fazer `git pull`
+- Usamos `git stash` para salvar mudanças locais temporariamente
+- Revisão cuidadosa de cada merge antes de `git push`
+
+**Aprendizado**: *Ferramentas de AI-assisted development (Lovable) aceleram muito o desenvolvimento, mas exigem disciplina no versionamento. Git continua sendo essencial.*
+
+### 💡 Principais Aprendizados Técnicos
+
+| Aprendizado | Descrição |
+|------------|-----------|
+| **Supabase RLS** | Row Level Security é poderoso, mas exige planejamento. Policies SQL podem ficar complexas rapidamente. |
+| **React Query** | Tanstack Query simplifica muito o gerenciamento de estado servidor. Invalidações automáticas são mágicas. |
+| **TypeScript Strict** | Type safety evitou inúmeros bugs em runtime, especialmente em objetos do Supabase. |
+| **PWA Service Workers** | Suporte offline exige pensar em cache strategies desde o início do projeto. |
+| **shadcn/ui** | Components headless + TailwindCSS = desenvolvimento rápido sem perder customização. |
+| **Safe Eval** | Nunca use `eval()` direto! Lovable criou `safeFormulaEvaluator.ts` para validar expressões matemáticas. |
+
+### 🎯 Decisões Arquiteturais Importantes
+
+1. **Supabase ao invés de Firebase**: PostgreSQL oferece queries mais poderosas e RLS nativo
+2. **PWA ao invés de app nativo**: Menor complexidade, deploy único, funciona em qualquer dispositivo
+3. **Fórmulas customizadas**: Permite personalização total pelo médico, não ficamos presos a lógica fixa
+4. **Sistema de conexões**: Melhor que "compartilhar senha" - cada usuário tem suas próprias credenciais
+
+### 🔄 Evolução do Mindset
+
+**2021 (Bot Telegram)**:
+- Pensamento: "Como faço o bot responder?"
+- Foco: Scripts e automação simples
+- Escalabilidade: Não era preocupação
+
+**2025 (Web App)**:
+- Pensamento: "Como arquiteto um sistema escalável e seguro?"
+- Foco: Arquitetura, UX, segurança, manutenibilidade
+- Escalabilidade: Pensada desde o início
+
+> *"O maior aprendizado foi entender que código bom não é apenas código que funciona, mas código que pode crescer, ser mantido e adaptado conforme novas necessidades surgem."*
+
+---
+
 ## 🙏 Agradecimentos
 
 - [Lovable](https://lovable.dev) - Plataforma de desenvolvimento
